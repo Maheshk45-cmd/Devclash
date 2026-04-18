@@ -1,0 +1,67 @@
+import Job from "../models/job.model.js";
+import User from "../models/user.model.js";
+
+// Draft Job
+export const draftJob = async (req, res) => {
+  try {
+    const { title } = req.body;
+    const user = await User.findById(req.user.id);
+
+    if (!user || !user.companyId) {
+      return res.status(400).json({ error: "User is not linked to a company." });
+    }
+
+    const isTrusted = ["OWNER", "ADMIN"].includes(user.role) || user.isTrustedPoster === true;
+    const status = isTrusted ? "LIVE" : "PENDING";
+
+    const job = await Job.create({
+      title,
+      companyId: user.companyId,
+      postedBy: user._id,
+      status
+    });
+
+    res.status(201).json({ message: `Job Drafted. Status: ${status}`, job });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Approve Job
+export const approveJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const job = await Job.findOne({ _id: id, companyId: req.user.companyId });
+    if (!job) {
+      return res.status(404).json({ error: "Job request not found in your company realm." });
+    }
+
+    if (job.status !== "PENDING") {
+      return res.status(400).json({ error: "Job is not in PENDING state." });
+    }
+
+    job.status = "LIVE";
+    await job.save();
+
+    res.status(200).json({ message: "Job Approved to LIVE", job });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Report Job
+export const reportJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Community members can flag any job
+    const job = await Job.findByIdAndUpdate(id, { status: "REPORTED" }, { new: true });
+    
+    if (!job) return res.status(404).json({ error: "Job not found" });
+
+    res.status(200).json({ message: "Job reported for manual review.", job });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
