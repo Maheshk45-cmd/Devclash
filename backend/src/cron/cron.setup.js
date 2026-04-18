@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import Event from "../models/event.model.js";
 import User from "../models/user.model.js";
+import { logActivity } from "../services/activity.service.js";
 
 export const setupCronJobs = () => {
   // 1. Escrow Payout Job: Runs daily at midnight
@@ -20,6 +21,12 @@ export const setupCronJobs = () => {
         event.escrowStatus = "RELEASED";
         await event.save();
         
+        await logActivity({
+          companyId: event.primaryHostId,
+          type: "ESCROW_RELEASED",
+          message: "Event duration elapsed successfully. Assigned Escrow payload was cleanly distributed."
+        });
+
         console.log(`[ESCROW MOCK PAYOUT - Event ID: ${event._id}]`);
         console.log(`---> Transferring ${event.splitPercentage}% to Primary Host: ${event.primaryHostId}`);
         console.log(`---> Transferring ${100 - event.splitPercentage}% to Co-Host: ${event.coHostId}`);

@@ -1,5 +1,7 @@
 import Event from "../models/event.model.js";
 import Registration from "../models/registration.model.js";
+import Company from "../models/company.model.js";
+import { logActivity } from "../services/activity.service.js";
 
 // @route   POST /api/events/create
 // @desc    Create a new event, manage collab status
@@ -30,12 +32,18 @@ export const createEvent = async (req, res) => {
 
     await newEvent.save();
 
+    await logActivity({
+      userId: req.user.id,
+      companyId: req.user.companyId,
+      type: "EVENT_CREATED",
+      message: `A new collaboration event blueprint was forwarded to a requested Co-Host.`
+    });
+
     res.status(201).json({
       success: true,
       message: coHostId ? "Event created and pending co-host approval." : "Event created and is now LIVE.",
       data: newEvent
     });
-
   } catch (error) {
     console.error("Create Event Error:", error);
     res.status(500).json({ success: false, message: "Failed to create event", error: error.message });
@@ -65,6 +73,13 @@ export const acceptCollab = async (req, res) => {
 
     event.eventStatus = "LIVE";
     await event.save();
+
+    await logActivity({
+      userId: req.user.id,
+      companyId: req.user.companyId,
+      type: "EVENT_ACCEPTED",
+      message: `The pending collaboration contract was formally signed and approved.`
+    });
 
     res.status(200).json({
       success: true,

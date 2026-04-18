@@ -6,6 +6,8 @@ import authRoutes from "./routes/auth.routes.js";
 import companyRoutes from "./routes/company.routes.js";
 import jobRoutes from "./routes/job.routes.js";
 import eventRoutes from "./routes/event.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+import activityRoutes from "./routes/activity.routes.js";
 
 // Cron Setup
 import { setupCronJobs } from "./cron/cron.setup.js";

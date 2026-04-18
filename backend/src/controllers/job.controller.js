@@ -1,5 +1,6 @@
 import Job from "../models/job.model.js";
 import User from "../models/user.model.js";
+import { logActivity } from "../services/activity.service.js";
 
 // Draft Job
 export const draftJob = async (req, res) => {
@@ -19,6 +20,13 @@ export const draftJob = async (req, res) => {
       companyId: user.companyId,
       postedBy: user._id,
       status
+    });
+
+    await logActivity({
+      userId: user._id,
+      companyId: user.companyId,
+      type: "JOB_CREATED",
+      message: `New job posted by ${isTrusted ? "Trusted Person" : "Employee"}`,
     });
 
     res.status(201).json({ message: `Job Drafted. Status: ${status}`, job });
@@ -43,6 +51,13 @@ export const approveJob = async (req, res) => {
 
     job.status = "LIVE";
     await job.save();
+
+    await logActivity({
+      userId: req.user.id,
+      companyId: req.user.companyId,
+      type: "JOB_APPROVED",
+      message: `Pending job request was formally approved by leadership.`,
+    });
 
     res.status(200).json({ message: "Job Approved to LIVE", job });
   } catch (error) {

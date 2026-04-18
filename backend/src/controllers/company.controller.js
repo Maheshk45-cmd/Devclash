@@ -1,5 +1,6 @@
 import Company from "../models/company.model.js";
 import User from "../models/user.model.js";
+import { logActivity } from "../services/activity.service.js";
 
 // Mock Owner Claim (Biometric Triangulation Equivalent)
 export const claimOwner = async (req, res) => {
@@ -37,6 +38,13 @@ export const claimOwner = async (req, res) => {
         companyId: company._id
       });
 
+      await logActivity({
+        userId: req.user.id,
+        companyId: company._id,
+        type: "COMPANY_MINTED",
+        message: `Company ownership formally established and verified via MCA mock datasets.`
+      });
+
       return res.status(200).json({ message: "Ownership verified successfully.", company });
     } else {
       return res.status(400).json({ error: "MCA Name mismatch. Fraud detected." });
@@ -58,6 +66,13 @@ export const appointAdmin = async (req, res) => {
 
     employee.role = "ADMIN";
     await employee.save();
+
+    await logActivity({
+      userId: req.user.id,
+      companyId: req.user.companyId,
+      type: "ADMIN_PROMOTED",
+      message: `An employee was successfully promoted to Admin by Ownership.`
+    });
 
     res.status(200).json({ message: "Employee appointed as Admin", employee });
   } catch (error) {
@@ -89,6 +104,13 @@ export const joinEmployee = async (req, res) => {
       { role: "EMPLOYEE", companyId: company._id },
       { new: true }
     );
+
+    await logActivity({
+      userId: req.user.id,
+      companyId: company._id,
+      type: "EMPLOYEE_JOINED",
+      message: `A new employee connected to the company realm seamlessly using a signed Domain extract.`
+    });
 
     res.status(200).json({ message: "Joined company successfully", user });
   } catch (error) {
