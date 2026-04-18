@@ -28,7 +28,7 @@ export const getUserDashboardData = async (userId) => {
     user.companyId ? Event.countDocuments({ primaryHostId: user.companyId }) : 0,
   ]);
 
-  return {
+  const data = {
     user: {
       email: user.email,
       role: user.role,
@@ -36,8 +36,18 @@ export const getUserDashboardData = async (userId) => {
       isFaceVerified: user.isFaceVerified,
     },
     company: companyData,
-    stats: { totalJobsPosted, pendingJobs, liveJobs, totalEvents },
   };
+
+  if (user.role === "EMPLOYEE") {
+    data.stats = { totalJobsPosted, liveJobs, totalEvents };
+  } else if (user.role === "ADMIN") {
+    data.stats = { totalJobsPosted, pendingJobs, liveJobs, totalEvents };
+  } else if (user.role === "OWNER") {
+    data.stats = { totalJobsPosted, pendingJobs, liveJobs, totalEvents };
+    data.companyStats = await getCompanyStatsData(user.companyId);
+  }
+
+  return data;
 };
 
 // 3. Company Stats

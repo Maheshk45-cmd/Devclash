@@ -1,6 +1,7 @@
 import Job from "../models/job.model.js";
 import User from "../models/user.model.js";
 import { logActivity } from "../services/activity.service.js";
+import { sendNotification, sendNotificationToAdmins } from "../services/notification.service.js";
 
 // Draft Job
 export const draftJob = async (req, res) => {
@@ -26,8 +27,12 @@ export const draftJob = async (req, res) => {
       userId: user._id,
       companyId: user.companyId,
       type: "JOB_CREATED",
-      message: `New job posted by ${isTrusted ? "Trusted Person" : "Employee"}`,
+      message: `New job '${title}' posted by ${isTrusted ? "Trusted Person" : "Employee"}`,
     });
+
+    if (!isTrusted) {
+      await sendNotificationToAdmins(user.companyId, `A new job '${title}' is pending your approval.`);
+    }
 
     res.status(201).json({ message: `Job Drafted. Status: ${status}`, job });
   } catch (error) {
@@ -56,8 +61,10 @@ export const approveJob = async (req, res) => {
       userId: req.user.id,
       companyId: req.user.companyId,
       type: "JOB_APPROVED",
-      message: `Pending job request was formally approved by leadership.`,
+      message: `Pending job request for '${job.title}' was formally approved by leadership.`,
     });
+
+    await sendNotification(job.postedBy, `Your job '${job.title}' has been successfully approved to LIVE.`);
 
     res.status(200).json({ message: "Job Approved to LIVE", job });
   } catch (error) {

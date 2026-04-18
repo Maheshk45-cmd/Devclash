@@ -1,6 +1,7 @@
 import Company from "../models/company.model.js";
 import User from "../models/user.model.js";
 import { logActivity } from "../services/activity.service.js";
+import { sendNotificationToAdmins, sendNotification } from "../services/notification.service.js";
 
 // Mock Owner Claim (Biometric Triangulation Equivalent)
 export const claimOwner = async (req, res) => {
@@ -71,8 +72,10 @@ export const appointAdmin = async (req, res) => {
       userId: req.user.id,
       companyId: req.user.companyId,
       type: "ADMIN_PROMOTED",
-      message: `An employee was successfully promoted to Admin by Ownership.`
+      message: `Employee '${employee.email}' was successfully promoted to Admin by Ownership.`
     });
+
+    await sendNotification(employeeUserId, "Congratulations, you have been promoted to ADMIN rank.");
 
     res.status(200).json({ message: "Employee appointed as Admin", employee });
   } catch (error) {
@@ -109,8 +112,10 @@ export const joinEmployee = async (req, res) => {
       userId: req.user.id,
       companyId: company._id,
       type: "EMPLOYEE_JOINED",
-      message: `A new employee connected to the company realm seamlessly using a signed Domain extract.`
+      message: `New employee '${googleEmail}' connected to the company realm seamlessly using a signed Domain extract.`
     });
+
+    await sendNotificationToAdmins(company._id, `New employee joined your company: ${googleEmail}`);
 
     res.status(200).json({ message: "Joined company successfully", user });
   } catch (error) {

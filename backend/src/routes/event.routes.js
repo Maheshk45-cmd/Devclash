@@ -6,9 +6,13 @@ import {
   registerForEvent,
   reportEvent,
 } from "../controllers/event.controller.js";
-import { roleMiddleware, requireAuth } from "../middlewares/auth.middleware.js";
+import { verifyToken } from "../middlewares/auth.middleware.js";
+import { roleMiddleware } from "../middlewares/role.middleware.js";
 
 const router = express.Router();
+
+// Enforce JWT check on all event routes natively
+router.use(verifyToken);
 
 // --- Host/Company Actions ---
 // Only Admin/Owners can create or cancel their events
@@ -22,8 +26,8 @@ router.post("/:id/cancel", roleMiddleware(["ADMIN", "OWNER"]), cancelEvent);
 
 
 // --- Attendee Actions ---
-// Any authenticated user can register or report an event (mocked using requireAuth)
-router.post("/:id/register", requireAuth, registerForEvent);
-router.post("/:id/report", requireAuth, reportEvent);
+// Any authenticated user can register or report an event
+router.post("/:id/register", registerForEvent);
+router.post("/:id/report", reportEvent);
 
 export default router;

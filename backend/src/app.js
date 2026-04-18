@@ -8,7 +8,8 @@ import jobRoutes from "./routes/job.routes.js";
 import eventRoutes from "./routes/event.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import activityRoutes from "./routes/activity.routes.js";
-
+import adminRoutes from "./routes/admin.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 // Cron Setup
 import { setupCronJobs } from "./cron/cron.setup.js";
 
@@ -20,7 +21,6 @@ app.use(cookieParser());
 // Initialize background chron jobs
 setupCronJobs();
 
-import eventRoutes from "./routes/event.routes.js";
 import { startEscrowEngine } from "./jobs/escrowPayout.job.js";
 
 // Initialize Escrow Payout Engine
@@ -31,8 +31,16 @@ app.get("/", (req, res) => {
   res.send("API is running 🚀. Escrow engine active.");
 });
 
-// Mount Routes
+// Mount Routes Base paths
+app.use("/api/auth", authRoutes);
+app.use("/api/company", companyRoutes);
+app.use("/api/jobs", jobRoutes);
 app.use("/api/events", eventRoutes);
 
+// Dashboard / Meta / Activity
+app.use("/api", dashboardRoutes);
+app.use("/api/activity", activityRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 export default app;

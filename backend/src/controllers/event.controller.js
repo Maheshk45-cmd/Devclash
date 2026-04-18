@@ -2,6 +2,7 @@ import Event from "../models/event.model.js";
 import Registration from "../models/registration.model.js";
 import Company from "../models/company.model.js";
 import { logActivity } from "../services/activity.service.js";
+import { sendNotificationToAdmins } from "../services/notification.service.js";
 
 // @route   POST /api/events/create
 // @desc    Create a new event, manage collab status
@@ -36,8 +37,10 @@ export const createEvent = async (req, res) => {
       userId: req.user.id,
       companyId: req.user.companyId,
       type: "EVENT_CREATED",
-      message: `A new collaboration event blueprint was forwarded to a requested Co-Host.`
+      message: `A new collaboration blueprint for '${title}' was forwarded to requested Co-Host.`
     });
+
+    await sendNotificationToAdmins(coHostId, `Event collaboration request received for '${title}'.`);
 
     res.status(201).json({
       success: true,
@@ -78,8 +81,10 @@ export const acceptCollab = async (req, res) => {
       userId: req.user.id,
       companyId: req.user.companyId,
       type: "EVENT_ACCEPTED",
-      message: `The pending collaboration contract was formally signed and approved.`
+      message: `The pending collaboration contract for '${event.title}' was formally signed and approved.`
     });
+
+    await sendNotificationToAdmins(event.primaryHostId, `Event '${event.title}' accepted by partner.`);
 
     res.status(200).json({
       success: true,
