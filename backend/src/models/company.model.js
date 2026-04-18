@@ -6,6 +6,11 @@ const companySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    domain: {
+      type: String, // Official Domain
+      lowercase: true,
+      trim: true,
+    },
     cin: {
       type: String,
       required: true,

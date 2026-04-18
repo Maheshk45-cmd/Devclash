@@ -1,19 +1,13 @@
 import { Router } from "express";
-import { claimOwner, appointAdmin, joinEmployee, trustEmployee } from "../controllers/company.controller.js";
+import { applyCompanyAdmin, joinEmployee } from "../controllers/company.controller.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
-import { roleMiddleware } from "../middlewares/role.middleware.js";
 
 const router = Router();
 
-router.use(verifyToken);
+// Public route for public signup mapping
+router.post("/admin/apply", applyCompanyAdmin);
 
-router.post("/claim-owner", claimOwner);
-router.post("/join-employee", joinEmployee);
-
-// Admin/Owner endpoint
-router.put("/trust-employee", roleMiddleware(["OWNER", "ADMIN"]), trustEmployee);
-
-// Owner-only endpoint
-router.post("/appoint-admin", roleMiddleware(["OWNER"]), appointAdmin);
+// Protected routes
+router.post("/join-employee", verifyToken, joinEmployee);
 
 export default router;

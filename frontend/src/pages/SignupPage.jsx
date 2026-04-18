@@ -15,6 +15,14 @@ export function SignupPage() {
   const [digiVerified, setDigiVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  
+  // Admin Flow State
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [password, setPassword] = useState('');
+  const [adminApplyError, setAdminApplyError] = useState('');
+  const [showOnboardRedirect, setShowOnboardRedirect] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
   const sendOtp = async () => {
     if (!email) {
@@ -75,6 +83,45 @@ export function SignupPage() {
     }
   };
 
+  const submitApplication = async () => {
+    if (accountType !== 'ADMIN') {
+      // standard user signup
+      return; 
+    }
+
+    setLoading(true);
+    setAdminApplyError('');
+    setShowOnboardRedirect(false);
+
+    try {
+      const res = await fetch('http://localhost:3000/api/company/admin/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: `${firstName} ${lastName}`.trim(), 
+          email, 
+          password, 
+          cin 
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 403) {
+          setShowOnboardRedirect(true);
+        }
+        throw new Error(data.error || 'APPLICATION FAILED');
+      }
+      
+      setSuccessMsg(data.message);
+      setStep(4); // Success screen
+    } catch (err) {
+      setAdminApplyError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0D0D0D] px-4 py-32">
       
@@ -97,6 +144,19 @@ export function SignupPage() {
           {errorMsg && (
             <div className="bg-red-500/10 border geometric-border border-red-500 text-red-500 p-4 rounded-xl text-center font-mono text-xs uppercase tracking-widest font-bold">
               ERROR: {errorMsg}
+            </div>
+          )}
+          
+          {adminApplyError && (
+            <div className="bg-red-500/10 border geometric-border border-red-500 text-red-500 p-4 rounded-xl text-center flex flex-col items-center gap-3">
+              <span className="font-mono text-xs uppercase tracking-widest font-bold">ERROR: {adminApplyError}</span>
+              {showOnboardRedirect && (
+                 <NavLink to="/support/company-onboarding">
+                    <Button variant="outline" className="text-[10px] h-8 px-4 border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
+                      REQUEST COMPANY ONBOARDING
+                    </Button>
+                 </NavLink>
+              )}
             </div>
           )}
 
@@ -193,11 +253,11 @@ export function SignupPage() {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormInput label="FIRST DESIGNATION" id="firstName" placeholder="JANE" />
-                <FormInput label="LAST DESIGNATION" id="lastName" placeholder="DOE" />
+                <FormInput label="FIRST DESIGNATION" id="firstName" placeholder="JANE" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                <FormInput label="LAST DESIGNATION" id="lastName" placeholder="DOE" value={lastName} onChange={e => setLastName(e.target.value)} />
               </div>
 
-              <FormInput label="SECURITY KEY (PASSWORD)" id="password" type="password" placeholder="••••••••••••" />
+              <FormInput label="SECURITY KEY (PASSWORD)" id="password" type="password" placeholder="••••••••••••" value={password} onChange={e => setPassword(e.target.value)} />
 
               {/* Digilocker Section */}
               <div className="pt-4 border-t geometric-border border-zinc-200 dark:border-zinc-800">
@@ -233,14 +293,30 @@ export function SignupPage() {
 
               <Button 
                 variant="primary" 
+                onClick={submitApplication}
                 className="w-full uppercase font-mono tracking-widest font-bold h-14 text-sm"
-                disabled={!(livenessVerified && digiVerified && (accountType !== 'ADMIN' || cin.length > 5))}
+                disabled={!(livenessVerified && digiVerified && (accountType !== 'ADMIN' || cin.length > 5)) || loading}
               >
-                {(livenessVerified && digiVerified) 
+                {loading ? "PROCESSING..." : (livenessVerified && digiVerified) 
                   ? (accountType === 'ADMIN' ? "INITIATE DIRECTOR VOTE" : "PROVISION ACCOUNT") 
                   : "AWAITING CLEARANCE"}
               </Button>
             </>
+          )}
+
+          {step === 4 && (
+             <div className="text-center py-12 space-y-6">
+                <div className="w-24 h-24 bg-green-500/10 text-green-500 rounded-full mx-auto flex items-center justify-center geometric-border border-green-500/50">
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <div>
+                   <h2 className="font-display font-black text-2xl mb-2">APPLICATION SUBMITTED</h2>
+                   <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest leading-relaxed">
+                      {successMsg} <br/>
+                      Our cryptographic ledger will notify you upon Director consensus.
+                   </p>
+                </div>
+             </div>
           )}
 
         </form>

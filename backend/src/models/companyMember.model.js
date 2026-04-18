@@ -22,6 +22,10 @@ const companyMemberSchema = new mongoose.Schema(
       enum: ["active", "pending", "rejected"],
       default: "pending",
     },
+    is_verified_owner: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
