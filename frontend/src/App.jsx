@@ -4,6 +4,8 @@ import { Navbar } from './components/layout/Navbar';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { NetworkPage } from './pages/NetworkPage';
+import { CompaniesPage } from './pages/CompaniesPage';
 import './index.css';
 
 function App() {
@@ -15,6 +17,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/network" element={<NetworkPage />} />
+          <Route path="/companies" element={<CompaniesPage />} />
           {/* Phase 1/2 placeholders */}
           <Route path="*" element={<div className="pt-32 px-4 text-center font-mono">Page not found (Routing Placeholder)</div>} />
         </Routes>
@@ -22,6 +26,7 @@ function App() {
     </BrowserRouter>
   );
 }
+
 
 
 export default App;
